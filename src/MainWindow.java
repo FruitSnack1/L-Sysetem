@@ -127,13 +127,13 @@ public class MainWindow extends JFrame{
         exampleListModel.addElement("star");
         turtleExamples.add(new Turtle("FF+[+F-F-F]-[-F+F+F]", new Rule('F',"FF+[+F-F-F]-[-F+F+F]"),25, .04f ));
         exampleListModel.addElement("tree");
-        ArrayList<Rule> ruleset = new ArrayList<>(){{
+        ArrayList<Rule> ruleset = new ArrayList<Rule>(){{
             add(new Rule('F',"FF"));
             add(new Rule('X',"F[+X][-X]FX"));
         }};
         turtleExamples.add(new Turtle("X", ruleset,25, .04f ));
         exampleListModel.addElement("arrow weed");
-        ArrayList<Rule> ruleset2 = new ArrayList<>(){{
+        ArrayList<Rule> ruleset2 = new ArrayList<Rule>(){{
             add(new Rule('F',"FF"));
             add(new Rule('X',"F-[[X]+X]+F[+FX]-X,F+[[X]-X]-F[-FX]+X"));
         }};
