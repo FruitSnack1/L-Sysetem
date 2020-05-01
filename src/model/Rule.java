@@ -9,11 +9,21 @@ public class Rule {
         this.b = b;
     }
 
+    public Rule(String rule){
+        this.a = rule.charAt(0);
+        this.b= rule.substring(2,rule.length());
+    }
+
     public char getA() {
         return a;
     }
 
     public String getB() {
         return b;
+    }
+
+    @Override
+    public String toString() {
+        return a+"="+b;
     }
 }

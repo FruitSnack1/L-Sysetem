@@ -1,18 +1,11 @@
 package main;
 
 import com.jogamp.opengl.*;
-import com.jogamp.opengl.awt.GLCanvas;
-import model.LSystem;
 import model.Turtle;
 
-import javax.swing.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-
 public class Renderer implements GLEventListener {
-
     private Turtle turtle;
-    private float angle = 25;
+    private int iterations = 3;
 
     public Renderer(Turtle turtle){
         this.turtle = turtle;
@@ -22,36 +15,35 @@ public class Renderer implements GLEventListener {
     public void display(GLAutoDrawable drawable) {
         final GL2 gl = drawable.getGL().getGL2();
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
-        gl.glPushMatrix();
-        String sentence = turtle.getSentence();
-        for (int i =0; i< sentence.length(); i++){
-            char current = sentence.charAt(i);
-            if(current == 'F'){
-                gl.glBegin (GL2.GL_LINES);//static field
-                gl.glVertex2f(0,0);
-                gl.glVertex2f(0,.05f);
-                gl.glEnd();
-                gl.glTranslatef(0,.05f,0);
+        for (int j = 0; j< iterations; j++){
+
+            gl.glPushMatrix();
+            String sentence = turtle.getGen(j);
+            for (int i =0; i< sentence.length(); i++){
+                char current = sentence.charAt(i);
+                if(current == 'F'){
+                    gl.glBegin(GL2.GL_LINES);//static field
+                    gl.glVertex2f(0,0);
+                    gl.glVertex2f(0,turtle.getLength());
+                    gl.glEnd();
+                    gl.glTranslatef(0,turtle.getLength(),0);
+                }
+                if(current == '+'){
+                    gl.glRotatef(-turtle.getAngle(),0,0,1);
+                }
+                if(current == '-'){
+                    gl.glRotatef(turtle.getAngle(),0,0,1);
+                }
+                if(current == '['){
+                    gl.glPushMatrix();
+                }
+                if(current == ']'){
+                    gl.glPopMatrix();
+                }
             }
-            if(current == '+'){
-                gl.glRotatef(-angle,0,0,1);
-            }
-            if(current == '-'){
-                gl.glRotatef(angle,0,0,1);
-            }
-            if(current == '['){
-                gl.glPushMatrix();
-            }
-            if(current == ']'){
-                gl.glPopMatrix();
-            }
+            gl.glPopMatrix();
         }
-        gl.glPopMatrix();
         gl.glFlush();
-
-
-
-
     }
 
     @Override
@@ -61,17 +53,24 @@ public class Renderer implements GLEventListener {
 
     @Override
     public void dispose(GLAutoDrawable arg0) {
-        //method body
+
     }
 
     @Override
     public void init(GLAutoDrawable arg0) {
-        // method body
         final GL2 gl = arg0.getGL().getGL2();
+        gl.glClearColor(.21f,.22f,.25f,1f);
         gl.glTranslatef(0,-1,0);
+        gl.glEnable(GL.GL_BLEND);
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+
     }
 
+    public Turtle getTurtle() {
+        return turtle;
+    }
 
-
-
-}//end of classimport javax.media.opengl.GL2;
+    public void setIterations(int iterations) {
+        this.iterations = iterations;
+    }
+}
