@@ -1,5 +1,6 @@
 package model;
 
+//Pravidla podle kterých L-systém vytváří další generace
 public class Rule {
     private char a;
     private String b;
@@ -11,6 +12,7 @@ public class Rule {
 
     public Rule(String rule){
         this.a = rule.charAt(0);
+        //Odstranění prvního symbolu a =
         this.b= rule.substring(2,rule.length());
     }
 

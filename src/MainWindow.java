@@ -30,77 +30,84 @@ public class MainWindow extends JFrame{
     private JButton btnHint;
 
     private ArrayList<Turtle> turtleExamples = new ArrayList<>();
-    private DefaultListModel exampleListModel = new DefaultListModel();
+    private DefaultListModel exampleListModel;
     private GLCanvas glcanvas;
+    private Turtle turtle;
 
     private Renderer renderer;
 
     public MainWindow(){
-
-    }
-
-    public void init(){
         add(rootPanel);
         setTitle("L-Systems");
         pack();
         setLocationRelativeTo(null);
         setResizable(false);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        //Nastavení komponentů
         initComponents();
+        //Přidání příkaldů
         fillTurtleExamples();
         initListeners();
         initCanvas();
 
-
-
-        ArrayList<Rule> ruleset = new ArrayList<>();
-        renderer = new Renderer(new Turtle("", ruleset, 25, .2f));
-        glcanvas.addGLEventListener(renderer);
-        glcanvas.setSize(800, 800);
-
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setVisible(true);
         renderPanel.add(glcanvas);
     }
 
+    //Vytvoření GLcanvasu, rendereru
     private void initCanvas(){
         final GLProfile profile = GLProfile.get(GLProfile.GL2);
         GLCapabilities capabilities = new GLCapabilities(profile);
-
-        // The GLJpanel class
         glcanvas = new GLCanvas(capabilities);
+        ArrayList<Rule> ruleset = new ArrayList<>();
+        turtle = new Turtle("", ruleset, 25, .2f);
+        renderer = new Renderer(turtle);
+        glcanvas.addGLEventListener(renderer);
+        glcanvas.setSize(800, 800);
     }
 
+    //Nastavení modelů, barev, borderů pro komponenty
     private void initComponents(){
-        SpinnerNumberModel spModel = new SpinnerNumberModel(3,0,10,1);
-        spIterations.setModel(spModel);
-        spAngle.getEditor().getComponent(0).setBackground(new Color(64,68,75));
-        spAngle.getEditor().getComponent(0).setForeground(new Color(240,243,251));
-        spAngle.setBorder(null);
+        SpinnerNumberModel spIterationsModel = new SpinnerNumberModel(3,0,10,1);
+        spIterations.setModel(spIterationsModel);
         spIterations.getEditor().getComponent(0).setBackground(new Color(64,68,75));
         spIterations.getEditor().getComponent(0).setForeground(new Color(240,243,251));
         spIterations.setBorder(null);
+
+        SpinnerNumberModel spAngleModel = new SpinnerNumberModel(45,0,360,1);
+        spAngle.setModel(spAngleModel);
+        spAngle.getEditor().getComponent(0).setBackground(new Color(64,68,75));
+        spAngle.getEditor().getComponent(0).setForeground(new Color(240,243,251));
+        spAngle.setBorder(null);
+
         SpinnerNumberModel spLengthModel = new SpinnerNumberModel(.05,.01,1,.01);
         spLength.setModel(spLengthModel);
         spLength.getEditor().getComponent(0).setBackground(new Color(64,68,75));
         spLength.getEditor().getComponent(0).setForeground(new Color(240,243,251));
         spLength.setBorder(null);
+
         btnDraw.setBorder(null);
         btnHint.setBorder(null);
         btnSave.setBorder(null);
         btnLoadExample.setBorder(null);
-        taRules.setFont(taRules.getFont().deriveFont(Font.BOLD, taRules.getFont().getSize()));
-        tfAxiom.setFont(tfAxiom.getFont().deriveFont(Font.BOLD, tfAxiom.getFont().getSize()));
-        tfAxiom.setCaretColor(new Color(240,243,251));
+
         taRules.setCaretColor(new Color(240,243,251));
-        spAngle.setValue(45);
+        taRules.setFont(taRules.getFont().deriveFont(Font.BOLD, taRules.getFont().getSize()));
+        taRules.setBorder(null);
+
+        tfAxiom.setCaretColor(new Color(240,243,251));
+        tfAxiom.setFont(tfAxiom.getFont().deriveFont(Font.BOLD, tfAxiom.getFont().getSize()));
+        tfAxiom.setBorder(null);
+
+        exampleListModel = new DefaultListModel();
         turtleList.setModel(exampleListModel);
         turtleList.setBackground(new Color(64,68,75));
-        tfAxiom.setBorder(null);
     }
 
+    //Načtení želví grafiky z listu příkladů
     private void loadTurtle(Turtle turtle){
         spLength.setValue(((double) turtle.getLength()));
-        renderer.setIterations(3);
         spIterations.setValue(3);
         spAngle.setValue(turtle.getAngle());
         tfAxiom.setText(turtle.getAxiom());
@@ -114,6 +121,7 @@ public class MainWindow extends JFrame{
         taRules.setText(rules);
     }
 
+    //Přidaní příkladů do listu příkladů
     private void fillTurtleExamples(){
         turtleExamples.add(new Turtle("F", new Rule('F',"F-F++F-F"),45,.1f ));
         exampleListModel.addElement("star");
@@ -182,16 +190,7 @@ public class MainWindow extends JFrame{
             }
 
             public void update(){
-                String[] rules = taRules.getText().replaceAll("\n","").replaceAll(" ","").split(";");
-                for( String rule : rules){
-                    if( !rule.matches("[A-Z]=[A-Z\\-\\+\\[\\]\\;,]+") || countOccurrencesOf(rule, '[') != countOccurrencesOf(rule,']')){
-                        taRules.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.red));
-                        return;
-                    }
-                }
-                taRules.setBorder(null);
-                renderer.getTurtle().setRuleset(parseRules());
-                glcanvas.display();
+                updateRules();
             }
         });
 
@@ -218,7 +217,7 @@ public class MainWindow extends JFrame{
         });
 
         spIterations.addChangeListener(changeEvent -> {
-            renderer.setIterations((int) spIterations.getValue());
+            turtle.setIterations((int) spIterations.getValue());
             glcanvas.display();
         });
 
@@ -274,19 +273,22 @@ public class MainWindow extends JFrame{
         });
     }
 
+    //Zobrazení nápovědy
     private void showHint(){
         JOptionPane.showMessageDialog(rootPanel, "F : draw line \n+ : turn right \n- : turn left \n[ : save state \n] : restore saved state", "How to", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    //Uložení aktuální želví grafiky do listu příkladů
     private void saveTurtle(){
         String turtleName = JOptionPane.showInputDialog("Name your turtle");
         String axiom = tfAxiom.getText();
         int angle = (int) spAngle.getValue();
         float length = ((Double) spLength.getValue()).floatValue();
-        turtleExamples.add(new Turtle("X", parseRules(),25, .04f ));
+        turtleExamples.add(new Turtle(axiom, parseRules(),angle, length ));
         exampleListModel.addElement(turtleName);
     }
 
+    //Převedení pravidel z textu do objektů
     private ArrayList<Rule> parseRules(){
         ArrayList<Rule> ruleset = new ArrayList<>();
         String[] rules = taRules.getText().replaceAll("\n","").split(";");
@@ -296,6 +298,27 @@ public class MainWindow extends JFrame{
         return ruleset;
     }
 
+    //Aktualizuje pravidla
+    private void updateRules(){
+        //Odstranění white space znaků
+        String[] rules = taRules.getText().replaceAll("\n","").replaceAll(" ","").split(";");
+        //Pro každé pravidlo zjistíme zda splňuje pravidla regexpu, pravidlo musí obsahovat stejný počet "[" a "]" aby renderer fungoval správně
+        for( String rule : rules){
+            if( !rule.matches("[A-Z]=[A-Z\\-\\+\\[\\]\\;,]+") || countOccurrencesOf(rule, '[') != countOccurrencesOf(rule,']')){
+                taRules.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.red));
+                return;
+            }
+            if( rule.contains(",") && !rule.matches("[A-Z]=[A-Z\\-\\+\\[\\]]*,[A-Z\\-\\+\\[\\]\\;,]+")){
+                taRules.setBorder(BorderFactory.createMatteBorder(1,1,1,1, Color.red));
+                return;
+            }
+        }
+        taRules.setBorder(null);
+        renderer.getTurtle().setRuleset(parseRules());
+        glcanvas.display();
+    }
+
+    //Pomocná metoda pro zpočítání znaků v řetězci
     private int countOccurrencesOf(String s, char c){
         int count = 0;
         for (int i = 0; i < s.length(); i++) {
@@ -307,6 +330,6 @@ public class MainWindow extends JFrame{
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(()-> new MainWindow().init());
+        SwingUtilities.invokeLater(()-> new MainWindow());
     }
 }
